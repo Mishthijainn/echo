@@ -1,5 +1,5 @@
 "use client"
-import { useAtomValue, useSetAtom } from "jotai"
+import { atom, useAtomValue, useSetAtom } from "jotai"
 import { LoaderIcon } from "lucide-react"
 import { contactSessionIdAtomFamily, errorMessageAtom, loadingMessageAtom, organizationIdAtom, screenAtom } from "../../atoms/widget-atoms"
 import { WidgetHeader } from "../components/widget-header"
@@ -19,7 +19,9 @@ export const WidgetLoadingScreen=({organizationId}:{organizationId:string | null
     const setScreen=useSetAtom(screenAtom)
     const setOrganizationId=useSetAtom(organizationIdAtom)
     const validateOrganization=useAction(api.public.organizations.validate)
-    const contactSessionId=useAtomValue(contactSessionIdAtomFamily(organizationId || ""))
+    const contactSessionId = useAtomValue(
+  organizationId ? contactSessionIdAtomFamily(organizationId) : atom(null)
+);
     useEffect(()=>{
         if(step!=="org"){
             return
