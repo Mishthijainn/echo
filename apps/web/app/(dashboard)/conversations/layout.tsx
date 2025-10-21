@@ -1,4 +1,4 @@
-import { ConversationLayout } from "@/modules/dashboard/ui/components/conversations-layout";
+import { ConversationLayout } from "@/modules/dashboard/ui/layouts/conversations-layout";
 export const Layout=({
     children
 }:{children:React.ReactNode})=>{

@@ -1,5 +1,5 @@
 import {ResizableHandle,ResizablePanel,ResizablePanelGroup} from "@workspace/ui/components/resizable"
-import { ConversationsPanel } from "./conversations-panel"
+import { ConversationsPanel } from "../components/conversations-panel"
 
 export const ConversationLayout=({
     children
