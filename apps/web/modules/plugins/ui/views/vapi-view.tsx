@@ -1,7 +1,7 @@
 "use client"
 
 import { GlobeIcon,PhoneCallIcon,PhoneIcon,WorkflowIcon } from "lucide-react"
-import { type Feature, PluginCard } from "../../components/plugin-card"
+import { type Feature, PluginCard } from "../components/plugin-card"
 import { useMutation, useQuery } from "convex/react"
 import { api } from "@workspace/backend/_generated/api"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@workspace/ui/components/dialog"
@@ -14,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import {toast} from "sonner"
 import { useState } from "react"
 import { Button } from "@workspace/ui/components/button"
+import { VapiConnectedView } from "../components/vapi-connected-view"
 const vapiFeatures:Feature[]=[
     {
         icon:GlobeIcon,
@@ -131,6 +132,47 @@ const VapiPluginForm=({
         </Dialog>
     )
 }
+
+const VapiPluginRemoveForm=({
+    open,
+    setOpen,
+}:{
+    open:boolean,
+    setOpen:(value:boolean)=>void
+})=>{
+    const removePlugin=useMutation(api.private.plugins.remove)
+    const onSubmit=async()=>{
+        try{
+            await removePlugin({
+                service:"vapi",
+            })
+            setOpen(false)
+            toast.success("Vapi Plugin removed")
+        }catch(error){
+            console.error(error)
+            toast.error("Something went weong")
+        }
+    }
+    return(
+        <Dialog onOpenChange={setOpen} open={open}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Disconnect Vapi</DialogTitle>
+                </DialogHeader>
+                <DialogDescription>
+                    Are you sure you want to disconnect the Vapi plugin?
+                </DialogDescription>
+                <DialogFooter>
+                    <Button onClick={onSubmit} variant="destructive">
+                        Disconnect
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+
+        </Dialog>
+    )
+}
+
 export const VapiView=()=>{
     const vapiPlugin=useQuery(api.private.plugins.getOne,{service:"vapi"})
     const [connectOpen,setConnectOpen]=useState(false)
@@ -145,6 +187,7 @@ export const VapiView=()=>{
     return(
         <>
         <VapiPluginForm open={connectOpen} setOpen={setConnectOpen}></VapiPluginForm>
+        <VapiPluginRemoveForm open={removeOpen} setOpen={setRemoveOpen}></VapiPluginRemoveForm>
         <div className="flex min-h-screen flex-col bg-muted p-8">
             <div className="mx-auto w-full max-w-screen-md">
                 <div className="space-y-2">
@@ -153,7 +196,7 @@ export const VapiView=()=>{
                 </div>
                 <div className="mt-8">
                     {vapiPlugin ?(
-                        <p>Connected</p>
+                        <VapiConnectedView onDisconnect={handleSubmit}></VapiConnectedView>
                     ):(
                         <PluginCard
                     serviceImage="/vapi.jpg"
