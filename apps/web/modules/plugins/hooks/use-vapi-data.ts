@@ -15,21 +15,27 @@ export const useVapiAssistants=():{
     const [error,setError]=useState<Error | null>(null);
     const getAssistants=useAction(api.private.vapi.getAssistants)
     useEffect(()=>{
+        let cancellled=false
         const fetchData=async ()=>{
             try{
                 setIsLoading(true)
                 const result=await getAssistants()
+                if(cancellled) {return}
                 setData(result)
                 setError(null)
             }catch(error){
+                if(cancellled) {return}
                 setError(error as Error)
                 toast.error("Falied to fetch assistants")
             }finally{
-                setIsLoading(false)
+                if(!cancellled) {setIsLoading(false)}
             }
         }
         fetchData()
-    },[getAssistants]) 
+        return ()=>{
+            cancellled=true;
+        }
+    },[]) 
     return {data,isLoading,error}
     
 }
@@ -44,21 +50,28 @@ export const useVapiPhoneNumbers=():{
     const [error,setError]=useState<Error | null>(null);
     const getPhoneNumbers=useAction(api.private.vapi.getPhoneNumbers)
     useEffect(()=>{
+        let cancellled=false
         const fetchData=async ()=>{
             try{
                 setIsLoading(true)
                 const result=await getPhoneNumbers()
+                if(cancellled) {return}
                 setData(result)
                 setError(null)
             }catch(error){
+                if(cancellled) {return}
                 setError(error as Error)
                 toast.error("Falied to fetch phone numbers")
             }finally{
-                setIsLoading(false)
+                 if(!cancellled) {setIsLoading(false)}
             }
         }
+        
         fetchData()
-    },[getPhoneNumbers])
+        return ()=>{
+            cancellled=true;
+        }
+    },[])
     return {data,isLoading,error}
     
 }
