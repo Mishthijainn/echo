@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import {z} from "zod"
 import { useForm } from "react-hook-form"
 import { useAtomValue, useSetAtom } from "jotai"
-import { contactSessionIdAtomFamily, conversationIdAtom, organizationIdAtom, screenAtom } from "../../atoms/widget-atoms"
+import { contactSessionIdAtomFamily, conversationIdAtom, organizationIdAtom, screenAtom, widgetSettingAtom } from "../../atoms/widget-atoms"
 import {useInfiniteScroll} from "@workspace/ui/hooks/use-infinite-scroll"
 import {InfiniteScrollTrigger} from "@workspace/ui/components/infinite-scroll-trigger"
 import { WidgetHeader } from "../components/widget-header"
@@ -34,11 +34,13 @@ import{
     AISuggestion,AISuggestions
 } from "@workspace/ui/components/ai/suggestion"
 import { Form, FormField } from "@workspace/ui/components/form"
+import { useMemo } from "react"
 const formSchema=z.object({
     message:z.string().min(1,"Message is required")
 })
 export const WidgetChatScreen=()=>{
     const setScreen=useSetAtom(screenAtom)
+    const widgetSettings=useAtomValue(widgetSettingAtom)
     const setConversationId=useSetAtom(conversationIdAtom)
     const conversationId=useAtomValue(conversationIdAtom)
     const organizationId=useAtomValue(organizationIdAtom)
@@ -61,12 +63,15 @@ export const WidgetChatScreen=()=>{
         loadMore:messages.loadMore,
         loadSize:10
     })
-    const form=useForm<z.infer<typeof formSchema>>({
-        resolver:zodResolver(formSchema),
-        defaultValues:{
-            message:""
-        }
-    })
+    type FormValues = z.infer<typeof formSchema>;
+
+        const form = useForm<FormValues>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            message: "",
+        },
+        }); 
+
     const createMessage=useAction(api.public.messages.create)
     const onSubmit=async (values:z.infer<typeof formSchema>)=>{
         if(!conversation || !contactSessionId){
@@ -83,6 +88,17 @@ export const WidgetChatScreen=()=>{
         setConversationId(null)
         setScreen("selection")
     }
+    const suggestions=useMemo(()=>{
+        if(!widgetSettings){
+            return [];
+        }
+        return Object.keys(widgetSettings.defaultSuggestions).map((key)=>{
+            return widgetSettings.defaultSuggestions[
+                key as keyof typeof widgetSettings.defaultSuggestions
+            ]
+        })
+    },[widgetSettings])
+
     return(
         <>
         <WidgetHeader className="flex items-center justify-between">
@@ -122,6 +138,26 @@ export const WidgetChatScreen=()=>{
                 })}
             </AIConversationContent>
         </AIConversation>
+        {toUIMessages(messaages.results??[])?.length===1 &&(
+        <AISuggestions classname="flex w-full flex-col items-end p-3">
+            {suggestions.map((suggestion)=>{
+                if(!suggestion){
+                    return null
+                }
+                return(
+                    <AISuggestion key={suggestion} onClick={()=>{
+                        form.setValue("message",suggestion,{
+                            shouldValidate:true,
+                            shouldDirty:true,
+                            shouldTouch:true,
+                        })
+                        form.handleSubmit(onSubmit)()
+                    }} suggestion={suggestion}>
+
+                    </AISuggestion>
+                )
+            })}
+        </AISuggestions>)}
         <Form {...form}>
             <AIInput className="rounded-none border-x-0 border-b-0"
             onSubmit={form.handleSubmit(onSubmit)}>
