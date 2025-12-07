@@ -138,7 +138,7 @@ export const WidgetChatScreen=()=>{
                 })}
             </AIConversationContent>
         </AIConversation>
-        {toUIMessages(messaages.results??[])?.length===1 &&(
+        {toUIMessages(messages.results??[])?.length===1 &&(
         <AISuggestions classname="flex w-full flex-col items-end p-3">
             {suggestions.map((suggestion)=>{
                 if(!suggestion){

@@ -11,3 +11,9 @@ export const contactSessionIdAtomFamily=atomFamily((organizationId:string)=>atom
 export const conversationIdAtom=atom<Id<"conversations">| null>(null)
 export const widgetSettingAtom=atom<Doc<"widgetSettings">|null>(null)
 
+export const vapiSecretAtom=atom<{
+    publicApiKey:string
+}|null>(null)
+
+export const hasVapiSecretsAtom=atom((get)=>get(vapiSecretAtom)!==null)
+

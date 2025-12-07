@@ -36,7 +36,7 @@ export const WidgetInboxScreen=()=>{
                     <Button variant="transparent" size="icon" onClick={()=>setScreen("selection")}>
                         <ArrowLeftIcon></ArrowLeftIcon>
                     </Button>
-                    <p>Inbpx</p>
+                    <p>Inbox</p>
                 </div>
         </WidgetHeader>
         <div className="flex flex-1 flex-col gap-y-2 overflow-y-auto">
