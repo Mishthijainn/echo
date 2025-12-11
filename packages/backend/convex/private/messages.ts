@@ -26,6 +26,19 @@ export const enhanceResponse=action({
                 message:"Organization not found"
             })
         }
+
+        const subscription=await ctx.runQuery(
+            internal.system.subscriptions.getByOrganizationId,
+            {
+                organizationId:orgId
+            }
+        )
+        if(subscription?.status!=="active"){
+            throw new ConvexError({
+                code:"BAD_REQUEST",
+                message:"Missing subscriptions"
+            })
+        }
         const response=await generateText({
             model:google("models/gemini-1.5-pro"),
             messages:[
