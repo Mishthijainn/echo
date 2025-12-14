@@ -8,132 +8,150 @@ import { useAction, useMutation, useQuery } from "convex/react"
 import { api } from "@workspace/backend/_generated/api"
 import { Id } from "@workspace/backend/_generated/dataModel"
 
-type InitStep="org" | "session" | "settings" | "vapi" | "done"
+type InitStep = "org" | "session" | "settings" | "vapi" | "done"
 
-export const WidgetLoadingScreen=({organizationId}:{organizationId:string | null})=>{
-    const [step,setStep]=useState<InitStep>("org")
-    const [sessionValid,setSessionValid]=useState(false)
-    const loadingMessage=useAtomValue(loadingMessageAtom)
-    const setErrorMessage=useSetAtom(errorMessageAtom)
-    const setLoadingMessage=useSetAtom(loadingMessageAtom)
-    const setScreen=useSetAtom(screenAtom)
-    const setOrganizationId=useSetAtom(organizationIdAtom)
-    const validateOrganization=useAction(api.public.organizations.validate)
-    const setWidgetSettings=useSetAtom(widgetSettingAtom)
-    const setVapiSecrets=useSetAtom(vapiSecretAtom)
+export const WidgetLoadingScreen = ({ organizationId }: { organizationId: string | null }) => {
+    const [step, setStep] = useState<InitStep>("org")
+    const [sessionValid, setSessionValid] = useState(false)
+    const loadingMessage = useAtomValue(loadingMessageAtom)
+    const setErrorMessage = useSetAtom(errorMessageAtom)
+    const setLoadingMessage = useSetAtom(loadingMessageAtom)
+    const setScreen = useSetAtom(screenAtom)
+    const setOrganizationId = useSetAtom(organizationIdAtom)
+    const validateOrganization = useAction(api.public.organizations.validate)
+    const setWidgetSettings = useSetAtom(widgetSettingAtom)
+    const setVapiSecrets = useSetAtom(vapiSecretAtom)
     const contactSessionId = useAtomValue(
-  organizationId ? contactSessionIdAtomFamily(organizationId) : atom(null)
-);
-    useEffect(()=>{
-        if(step!=="org"){
+        organizationId ? contactSessionIdAtomFamily(organizationId) : atom(null)
+    );
+    useEffect(() => {
+        if (step !== "org") {
             return
         }
         setLoadingMessage("Loading organization")
-        if(!organizationId){
+        if (!organizationId) {
             setErrorMessage("Organization ID is required")
             setScreen("error")
             return
         }
 
         setLoadingMessage("Verifying...")
-        validateOrganization({organizationId})
-        .then((result)=>{
-            if(result.valid){
-                setOrganizationId(organizationId)
-                setStep("session")
-            }else{
-                setErrorMessage(result.reason || "Invalid Configuration")
+        validateOrganization({ organizationId })
+            .then((result) => {
+                if (result.valid) {
+                    setOrganizationId(organizationId)
+                    setStep("session")
+                } else {
+                    setErrorMessage(result.reason || "Invalid Configuration")
+                    setScreen("error")
+                }
+            }).catch(() => {
+                setErrorMessage("Unable to verify organization")
                 setScreen("error")
-            }
-        }).catch(()=>{
-            setErrorMessage("Unable to verify organization")
-            setScreen("error")
-        })
-    },[step,organizationId,setErrorMessage,setScreen,setOrganizationId,setStep,validateOrganization,setLoadingMessage])
-    const validateContactSession=useMutation(api.public.contactSessions.validate)
-    useEffect(()=>{
-        if(step!=="session"){
+            })
+    }, [step, organizationId, setErrorMessage, setScreen, setOrganizationId, setStep, validateOrganization, setLoadingMessage])
+    const validateContactSession = useMutation(api.public.contactSessions.validate)
+    useEffect(() => {
+        if (step !== "session") {
             return
         }
         setLoadingMessage("Finding contact session ID...")
-        if(!contactSessionId){
+        if (!contactSessionId) {
             setSessionValid(false)
             setStep("settings")
             return
         }
         setLoadingMessage("Validating session...")
         validateContactSession({
-            contactSessionId:contactSessionId as Id<"contactSessions">
-        }).then((result)=>{
+            contactSessionId: contactSessionId as Id<"contactSessions">
+        }).then((result) => {
             setSessionValid(result.valid)
             setStep("settings")
-        }).catch(()=>{
+        }).catch(() => {
             setSessionValid(false)
             setStep("settings")
         })
 
-    },[step,contactSessionId,validateContactSession,setLoadingMessage])
+    }, [step, contactSessionId, validateContactSession, setLoadingMessage])
 
-    const widgetSettings=useQuery(api.public.widgetSettings.getByOrganizationId,organizationId?{organizationId}:"skip")
-    useEffect(()=>{
-        if(step!="settings"){
+    const widgetSettings = useQuery(api.public.widgetSettings.getByOrganizationId, organizationId ? { organizationId } : "skip")
+    useEffect(() => {
+        if (step != "settings") {
             return;
         }
         setLoadingMessage("Loading widget settings...")
-        if(widgetSettings!==undefined && organizationId){
-            setWidgetSettings(widgetSettings)
+        if (widgetSettings !== undefined && organizationId) {
+            // If settings don't exist, use default settings (they should be auto-provisioned, but handle edge case)
+            if (widgetSettings === null) {
+                setWidgetSettings({
+                    organizationId,
+                    greetMessage: "Hi! How can I help you today?",
+                    defaultSuggestions: {
+                        suggestion1: "How do I get started?",
+                        suggestion2: "What are your pricing plans?",
+                        suggestion3: "I need help with my account"
+                    },
+                    vapiSettings: {
+                        assistantId: "",
+                        phoneNumber: ""
+                    }
+                } as any)
+            } else {
+                setWidgetSettings(widgetSettings)
+            }
             setStep("vapi")
         }
-    },[
+    }, [
         step,
         widgetSettings,
+        organizationId,
         setWidgetSettings,
         setLoadingMessage,
         setStep
     ])
-    const getVapiSecrets=useAction(api.public.secrets.getVapiSecrets)
-    useEffect(()=>{
-        if(step!=="vapi") return;
-        if(!organizationId){
+    const getVapiSecrets = useAction(api.public.secrets.getVapiSecrets)
+    useEffect(() => {
+        if (step !== "vapi") return;
+        if (!organizationId) {
             setErrorMessage("Organization ID is required")
             setScreen("error")
             return
         }
         setLoadingMessage("Loading voice features...")
-        getVapiSecrets({organizationId}).then((secrets)=>{
+        getVapiSecrets({ organizationId }).then((secrets) => {
             setVapiSecrets(secrets)
             setStep("done")
-        }).catch(()=>{
+        }).catch(() => {
             setVapiSecrets(null)
             setStep("done")
         })
-    },[
-        step,organizationId,getVapiSecrets,setVapiSecrets,setLoadingMessage,setStep
+    }, [
+        step, organizationId, getVapiSecrets, setVapiSecrets, setLoadingMessage, setStep
     ])
-    useEffect(()=>{
-        if(step!=='done'){
+    useEffect(() => {
+        if (step !== 'done') {
             return
         }
-        const hasValidSession=contactSessionId && sessionValid
-        setScreen(hasValidSession? "selection":"auth")
+        const hasValidSession = contactSessionId && sessionValid
+        setScreen(hasValidSession ? "selection" : "auth")
 
-    },[step,contactSessionId,sessionValid,setScreen])
-    return(
+    }, [step, contactSessionId, sessionValid, setScreen])
+    return (
         <>
-        <WidgetHeader>
-            <div className="flex flex-col justify-between
+            <WidgetHeader>
+                <div className="flex flex-col justify-between
                  gap-y-2 px-2 py-6">
                     <p className="font-semibold text-3xl">Hi there!</p>
                     <p className="font-semibold text-lg">Let&apos;s get you started
                     </p>
                 </div>
-        </WidgetHeader>
-        <div className="flex flex-1 flex-col items-center justify-center gap-y-4 p-4 text-muted-foreground">
-            <LoaderIcon className="animate-spin"></LoaderIcon>
+            </WidgetHeader>
+            <div className="flex flex-1 flex-col items-center justify-center gap-y-4 p-4 text-muted-foreground">
+                <LoaderIcon className="animate-spin"></LoaderIcon>
                 <p className="text-sm">
                     {loadingMessage || "Loading ..."}
                 </p>
-        </div>
+            </div>
         </>
     )
 }

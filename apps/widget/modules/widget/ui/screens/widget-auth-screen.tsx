@@ -10,21 +10,24 @@ import {api} from "@workspace/backend/_generated/api"
 import { Doc } from "@workspace/backend/_generated/dataModel";
 import { useAtomValue, useSetAtom } from "jotai";
 import { contactSessionIdAtomFamily, organizationIdAtom, screenAtom } from "../../atoms/widget-atoms";
+import { Resolver } from "react-hook-form"
 const formSchema=z.object({
-    name:z.string().min(1,"Name is required"),
-    email:z.string().email("Invalid email address")
+  name:z.string().min(1,"Name is required"),
+  email:z.string().email("Invalid email address")
 })
+type FormValues = z.infer<typeof formSchema>
+const resolver: Resolver<FormValues> = zodResolver(formSchema)
 export const WidgetAuthScreen=()=>{
     const setScreen=useSetAtom(screenAtom)
     const organizationId=useAtomValue(organizationIdAtom)
     const setContactSessionId=useSetAtom(contactSessionIdAtomFamily(organizationId || ""))
-    const form=useForm<z.infer<typeof formSchema>>({
-        resolver:zodResolver(formSchema),
-        defaultValues:{
-            name:"",
-            email:""
-        }
-    })
+    const form = useForm<FormValues>({
+    resolver,
+    defaultValues: {
+      name: "",
+      email: "",
+    },
+  })
     const createContactSession=useMutation(api.public.contactSessions.create)
     const onSubmit=async(values:z.infer<typeof formSchema>)=>{
         if(!organizationId){

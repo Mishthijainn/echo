@@ -12,24 +12,24 @@ import { WidgetInboxScreen } from "../screens/widget-inbox-screen";
 import { WidgetVoiceScreen } from "../screens/widget-voice-screen";
 import { WidgetContactScreen } from "../screens/widget-contact-screen";
 
-interface Props{
-    organizationId:string | null;
+interface Props {
+    organizationId: string | null;
 }
 
-export const WidgetView=({organizationId}:Props)=>{
-    const screen=useAtomValue(screenAtom)
-    const screenComponents={
-        error:<WidgetErrorScreen></WidgetErrorScreen>,
-        loading:<WidgetLoadingScreen organizationId={organizationId}></WidgetLoadingScreen>,
-        auth:<WidgetAuthScreen></WidgetAuthScreen>,
-        voice:<WidgetVoiceScreen/>,
-        inbox:<WidgetInboxScreen></WidgetInboxScreen>,
-        selection:<WidgetSelectionScreen></WidgetSelectionScreen>,
-        chat:<WidgetChatScreen></WidgetChatScreen>,
-        contact:<WidgetContactScreen></WidgetContactScreen>
+export const WidgetView = ({ organizationId }: Props) => {
+    const screen = useAtomValue(screenAtom)
+    const screenComponents = {
+        error: <WidgetErrorScreen></WidgetErrorScreen>,
+        loading: <WidgetLoadingScreen organizationId={organizationId}></WidgetLoadingScreen>,
+        auth: <WidgetAuthScreen></WidgetAuthScreen>,
+        voice: <WidgetVoiceScreen />,
+        inbox: <WidgetInboxScreen></WidgetInboxScreen>,
+        selection: <WidgetSelectionScreen></WidgetSelectionScreen>,
+        chat: <WidgetChatScreen></WidgetChatScreen>,
+        contact: <WidgetContactScreen></WidgetContactScreen>
 
     }
-    return(
+    return (
         <main className="flex h-full w-full flex-col overflow-hidden rounded=xl border bg-muted">
             {screenComponents[screen]}
         </main>

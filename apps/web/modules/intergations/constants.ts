@@ -12,7 +12,7 @@ export const INTERGRATIONS=[
     {
         id:"nextjs",
         title:"Next.js",
-        icon:"/languages/nextjssvg"
+        icon:"/languages/nextjs.svg"
     },
     {
         id:"javascript",
